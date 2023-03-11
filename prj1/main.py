@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 cv2.namedWindow('Example', 0)
-image = cv2.imread('D:\\codes\\python\\img\\road\\r6.jpg', flags=1)
+image = cv2.imread('..\\img\\road\\r6.jpg', flags=1)
 imgCrop = image[1000:4608,:]  #图像剪裁
 imgResize = cv2.resize(imgCrop,(round(3608/7),round(3456/7))) #改变图像大小
 # BGR图转为HSV
