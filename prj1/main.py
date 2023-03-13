@@ -9,8 +9,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.signal import savgol_filter
 from scipy.signal import find_peaks, peak_widths
+from scipy import signal
 
-image = cv2.imread('..\\img\\road\\r10.jpg', flags=1)
+image = cv2.imread('..\\img\\road\\r7.jpg', flags=1)
 imgCrop = image[1000:4608,:]  #图像剪裁
 imgResize = cv2.resize(imgCrop,(round(3608/7),round(3456/7))) #改变图像大小
 
@@ -25,22 +26,29 @@ hsv = cv2.cvtColor(Gauss, cv2.COLOR_BGR2HSV)
 hists = cv2.calcHist([hsv], [1], None, [180], [0, 180])
 histv = cv2.calcHist([hsv], [2], None, [255], [0, 255])
 # histsf = savgol_filter(hists, 101, 1, mode= 'nearest')
-hists_peaks, hists_properties = find_peaks(hists.flatten(), width=2,distance=20)#prominence=1,
-hists_results_half = peak_widths(hists.flatten(), hists_peaks, rel_height=0.8)
+#滤波
+b, a = signal.butter(8, 0.1, 'lowpass')
+filtedhists = signal.filtfilt(b, a, hists.flatten())       #data为要过滤的信号
 
-histv_peaks, histv_properties = find_peaks(histv.flatten(), width=10,distance=255)#prominence=1,
+hists_peaks, hists_properties = find_peaks(filtedhists, rel_height=0.8,width=4,distance=20,height=2000)#prominence=1,
+hists_results_half = peak_widths(filtedhists.flatten(), hists_peaks, rel_height=0.8)
+h_threshold_min=round(hists_results_half[3][0])
+
+histv_peaks, histv_properties = find_peaks(histv.flatten(), rel_height=0.8,width=10,distance=255,height=2500)#prominence=1,
 histv_results_half = peak_widths(histv.flatten(), histv_peaks, rel_height=0.8)
 
-print("shape ")
+
 plt.plot(hists, color="r")
 plt.plot(histv, color="g")
+plt.plot(filtedhists, color="b")
 
-plt.plot(hists_peaks, hists[hists_peaks], "x")
+plt.plot(hists_peaks, filtedhists[hists_peaks], "x")
 plt.hlines(*hists_results_half[1:], color="C2")
 
 plt.plot(histv_peaks, histv[histv_peaks], "x")
 plt.hlines(*histv_results_half[1:], color="C3")
 
+print("shape " ,len(hists_results_half[1]))
 # 直方图显示
 # plt.subplot(221),plt.hist(h, 180),plt.title("h")
 # plt.subplot(222),plt.hist(s, 255),plt.title("s")
@@ -64,15 +72,15 @@ def empty(a):
     return h_min, h_max, s_min, s_max, v_min, v_max
 
 
-# path = 'Resources/11.jpg'
+path = 'Resources/11.jpg'
 # 创建一个窗口，放置6个滑动条
 cv2.namedWindow("TrackBars")
 cv2.resizeWindow("TrackBars", 640, 240)
-cv2.createTrackbar("Hue Min", "TrackBars", 14, 179, empty)
-cv2.createTrackbar("Hue Max", "TrackBars", 25, 179, empty)
-cv2.createTrackbar("Sat Min", "TrackBars", 40, 255, empty)
+cv2.createTrackbar("Hue Min", "TrackBars", 12, 179, empty)
+cv2.createTrackbar("Hue Max", "TrackBars", 20, 179, empty)
+cv2.createTrackbar("Sat Min", "TrackBars", h_threshold_min, 255, empty)
 cv2.createTrackbar("Sat Max", "TrackBars", 240, 255, empty)
-cv2.createTrackbar("Val Min", "TrackBars", 69, 255, empty)
+cv2.createTrackbar("Val Min", "TrackBars", round(histv_results_half[3][0]), 255, empty)
 cv2.createTrackbar("Val Max", "TrackBars", 255, 255, empty)
 
 while True:
