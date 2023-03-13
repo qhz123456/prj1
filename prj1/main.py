@@ -8,25 +8,33 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 
-cv2.namedWindow('Example', 0)
-image = cv2.imread('..\\img\\road\\r6.jpg', flags=1)
+image = cv2.imread('..\\img\\road\\r9.jpg', flags=1)
 imgCrop = image[1000:4608,:]  #图像剪裁
 imgResize = cv2.resize(imgCrop,(round(3608/7),round(3456/7))) #改变图像大小
+
+Gauss = cv2.GaussianBlur(imgResize, (5, 5), 1)
+
 # BGR图转为HSV
-hsv = cv2.cvtColor(imgResize, cv2.COLOR_BGR2HSV)
+hsv = cv2.cvtColor(Gauss, cv2.COLOR_BGR2HSV)
 # 提取hsv中H通道数据
-h = hsv[:, :, 0].ravel()
-s = hsv[:, :, 1].ravel()
-v = hsv[:, :, 2].ravel()
+# h = hsv[:, :, 0]
+# s = hsv[:, :, 1]
+# v = hsv[:, :, 2]
+hists = cv2.calcHist([hsv], [1], None, [180], [0, 180])
+histv = cv2.calcHist([hsv], [2], None, [255], [0, 255])
+print("shape ",hists.shape)
+plt.plot(hists, color="r")
+plt.plot(histv, color="g")
 # 直方图显示
-plt.subplot(221),plt.hist(h, 180)
-plt.subplot(222),plt.hist(s, 180)
-plt.subplot(223),plt.hist(v, 180)#, [0, 180]
+# plt.subplot(221),plt.hist(h, 180),plt.title("h")
+# plt.subplot(222),plt.hist(s, 255),plt.title("s")
+# plt.subplot(223),plt.hist(v, 255),plt.title("v")#, [0, 180]
+plt.grid()
 plt.show()
 
-gray = cv2.cvtColor(imgResize, cv2.COLOR_BGR2GRAY)
-cv2.imshow('gray',hsv[:, :, 1])
-cv2.waitKey(0)
+# gray = cv2.cvtColor(imgResize, cv2.COLOR_BGR2GRAY)
+# cv2.imshow('gray',hsv[:, :, 1])
+# cv2.waitKey(0)
 
 # 滑动条的回调函数，获取滑动条位置处的值
 def empty(a):
@@ -40,15 +48,15 @@ def empty(a):
     return h_min, h_max, s_min, s_max, v_min, v_max
 
 
-path = 'Resources/11.jpg'
+# path = 'Resources/11.jpg'
 # 创建一个窗口，放置6个滑动条
 cv2.namedWindow("TrackBars")
 cv2.resizeWindow("TrackBars", 640, 240)
-cv2.createTrackbar("Hue Min", "TrackBars", 0, 179, empty)
-cv2.createTrackbar("Hue Max", "TrackBars", 19, 179, empty)
-cv2.createTrackbar("Sat Min", "TrackBars", 110, 255, empty)
+cv2.createTrackbar("Hue Min", "TrackBars", 14, 179, empty)
+cv2.createTrackbar("Hue Max", "TrackBars", 25, 179, empty)
+cv2.createTrackbar("Sat Min", "TrackBars", 40, 255, empty)
 cv2.createTrackbar("Sat Max", "TrackBars", 240, 255, empty)
-cv2.createTrackbar("Val Min", "TrackBars", 153, 255, empty)
+cv2.createTrackbar("Val Min", "TrackBars", 69, 255, empty)
 cv2.createTrackbar("Val Max", "TrackBars", 255, 255, empty)
 
 while True:
