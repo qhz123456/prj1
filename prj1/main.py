@@ -7,8 +7,10 @@ import cv2
 import math
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.signal import savgol_filter
+from scipy.signal import find_peaks, peak_widths
 
-image = cv2.imread('..\\img\\road\\r9.jpg', flags=1)
+image = cv2.imread('..\\img\\road\\r10.jpg', flags=1)
 imgCrop = image[1000:4608,:]  #图像剪裁
 imgResize = cv2.resize(imgCrop,(round(3608/7),round(3456/7))) #改变图像大小
 
@@ -22,9 +24,23 @@ hsv = cv2.cvtColor(Gauss, cv2.COLOR_BGR2HSV)
 # v = hsv[:, :, 2]
 hists = cv2.calcHist([hsv], [1], None, [180], [0, 180])
 histv = cv2.calcHist([hsv], [2], None, [255], [0, 255])
-print("shape ",hists.shape)
+# histsf = savgol_filter(hists, 101, 1, mode= 'nearest')
+hists_peaks, hists_properties = find_peaks(hists.flatten(), width=2,distance=20)#prominence=1,
+hists_results_half = peak_widths(hists.flatten(), hists_peaks, rel_height=0.8)
+
+histv_peaks, histv_properties = find_peaks(histv.flatten(), width=10,distance=255)#prominence=1,
+histv_results_half = peak_widths(histv.flatten(), histv_peaks, rel_height=0.8)
+
+print("shape ")
 plt.plot(hists, color="r")
 plt.plot(histv, color="g")
+
+plt.plot(hists_peaks, hists[hists_peaks], "x")
+plt.hlines(*hists_results_half[1:], color="C2")
+
+plt.plot(histv_peaks, histv[histv_peaks], "x")
+plt.hlines(*histv_results_half[1:], color="C3")
+
 # 直方图显示
 # plt.subplot(221),plt.hist(h, 180),plt.title("h")
 # plt.subplot(222),plt.hist(s, 255),plt.title("s")
