@@ -12,7 +12,7 @@ from scipy.signal import find_peaks, peak_widths
 from scipy import signal
 
 image = cv2.imread('..\\img\\road\\r7.jpg', flags=1)
-imgCrop = image[1000:4608,:]  #图像剪裁
+imgCrop = image[1600:4608,:]  #图像剪裁
 imgResize = cv2.resize(imgCrop,(round(3608/7),round(3456/7))) #改变图像大小
 
 Gauss = cv2.GaussianBlur(imgResize, (5, 5), 1)
@@ -30,9 +30,25 @@ histv = cv2.calcHist([hsv], [2], None, [255], [0, 255])
 b, a = signal.butter(8, 0.1, 'lowpass')
 filtedhists = signal.filtfilt(b, a, hists.flatten())       #data为要过滤的信号
 
-hists_peaks, hists_properties = find_peaks(filtedhists, rel_height=0.8,width=4,distance=20,height=2000)#prominence=1,
+hists_peaks, hists_properties = find_peaks(filtedhists, rel_height=0.5,width=3,height=1500,distance=20)#prominence=1,
 hists_results_half = peak_widths(filtedhists.flatten(), hists_peaks, rel_height=0.8)
-h_threshold_min=round(hists_results_half[3][0])
+h_threshold_min=50
+num_speak=len(hists_results_half[3])
+print("num_speak",num_speak)
+if num_speak==1:
+    h_threshold_min = round(hists_results_half[3][0])
+elif num_speak>1:
+    if hists_results_half[3][0]>40 and hists_results_half[3][0]<70:
+        h_threshold_min = round(hists_results_half[3][0])
+    elif hists_results_half[3][0]>70 and hists_results_half[3][0]>hists_results_half[2][1]:
+        h_threshold_min=round(hists_results_half[2][1])-10
+    elif hists_results_half[3][0]<40:
+        if hists_results_half[1][0]<hists_results_half[1][1]:
+            h_threshold_min = round(hists_results_half[3][1])
+        elif hists_results_half[3][0]<hists_results_half[2][1]:
+            h_threshold_min=round((hists_results_half[3][0]+hists_results_half[2][1])/2)
+        else:
+            h_threshold_min = round(hists_results_half[3][0])
 
 histv_peaks, histv_properties = find_peaks(histv.flatten(), rel_height=0.8,width=10,distance=255,height=2500)#prominence=1,
 histv_results_half = peak_widths(histv.flatten(), histv_peaks, rel_height=0.8)
@@ -77,7 +93,7 @@ path = 'Resources/11.jpg'
 cv2.namedWindow("TrackBars")
 cv2.resizeWindow("TrackBars", 640, 240)
 cv2.createTrackbar("Hue Min", "TrackBars", 12, 179, empty)
-cv2.createTrackbar("Hue Max", "TrackBars", 20, 179, empty)
+cv2.createTrackbar("Hue Max", "TrackBars", 26, 179, empty)
 cv2.createTrackbar("Sat Min", "TrackBars", h_threshold_min, 255, empty)
 cv2.createTrackbar("Sat Max", "TrackBars", 240, 255, empty)
 cv2.createTrackbar("Val Min", "TrackBars", round(histv_results_half[3][0]), 255, empty)
